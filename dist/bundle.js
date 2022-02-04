@@ -72,6 +72,7 @@ var axios = (function () {
           request = null;
         });
       }
+      console.log('requestData', requestData);
       request.send(requestData);
     })
   };
@@ -93,7 +94,7 @@ var axios = (function () {
     console.log('dispatchRequest', config);
     var adapter = defaults_1.adapter;
     return adapter(config).then(function onAdapterResolution(response) {
-      return response + ' gsdadapter'
+      return (' gsdadapter')
     }, function onAdapterRejection(reason) {
       throw reason
     })
@@ -112,6 +113,71 @@ var axios = (function () {
   };
 
   var InterceptorManager_1 = InterceptorManager;
+
+  var toString = Object.prototype.toString;
+
+  function extend(a, b, thisArg) {
+    Object.keys(b).forEach(item => {
+      a[item] = b[item];
+    });
+  }
+
+  function isArray(val) {
+    return toString.call(val) === '[object Array]';
+  }
+
+  function forEach(obj, fn) {
+    if (obj === null || typeof obj === 'undefined') {
+      return;
+    }
+    if (isArray(obj)) {
+      for (var i = 0, l = obj.length; i < l; i++) {
+        fn.call(null, obj[i]);
+      }
+    }
+  }
+
+
+  function isUndefined(val) {
+    return typeof val === 'undefined';
+  }
+
+  var utils = {
+    extend: extend,
+    forEach: forEach,
+    isUndefined: isUndefined
+  };
+
+  var mergeConfig = function mergeConfig(config1, config2) {
+    var config = {};
+    var valueFromConfig2Keys = ['url', 'method', 'data'];
+    function getMergedValue(target, source) {
+      return source;
+    }
+    function mergeDeepProperties(prop) {
+      if (!utils.isUndefined(config2[prop])) {
+        config[prop] = getMergedValue(config1[prop], config2[prop]);
+      } else if (!utils.isUndefined(config1[prop])) {
+        config[prop] = getMergedValue(undefined, config1[prop]);
+      }
+    }
+    utils.forEach(valueFromConfig2Keys, function valueFromConfig2(prop) {
+      if (!utils.isUndefined(config2[prop])) {
+        config[prop] = getMergedValue(undefined, config2[prop]);
+      }
+    });
+    var axiosKeys = valueFromConfig2Keys;
+    // 筛选出不在 valueFromConfig2Keys 中的key
+    var otherKeys = Object
+      .keys(config1)
+      .concat(Object.keys(config2))
+      .filter(function filterAxiosKeys(key) {
+        return axiosKeys.indexOf(key) === -1;
+      });
+    utils.forEach(otherKeys, mergeDeepProperties);
+    console.log('gsdaaa', config);
+    return config;
+  };
 
   function Axios(instanceConfig) {
     this.defaults = instanceConfig;
@@ -143,25 +209,26 @@ var axios = (function () {
     return promise
   };
 
-  Axios.prototype.get = function request(config) {
-    console.log('gsd1get', config);
-  };
+  // Axios.prototype.get = function request(config) {
+  //   console.log('gsd1get', config)
+  // }
+  utils.forEach(['delete', 'get', 'head', 'options'], function forEachMethodNoData(method) {
+    Axios.prototype[method] = function (url, config) {
+      return this.request(mergeConfig(config || {}, {
+        method: method,
+        url: url,
+        data: (config || {}).data
+      }));
+    };
+  });
+
+
   Axios.prototype.getUri = function getUri(config) {
     console.log('gsd1getUri', config);
   };
 
 
   var Axios_1 = Axios;
-
-  function extend(a, b, thisArg) {
-    Object.keys(b).forEach(item => {
-      a[item] = b[item];
-    });
-  }
-
-  var utils = {
-    extend: extend
-  };
 
   function CancelToken(executor) {
     var resolvePromise;

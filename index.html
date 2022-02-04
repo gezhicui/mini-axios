@@ -16,16 +16,12 @@
     }
     var cancel;
 
-    axios({
-      url: 'http://localhost:3000/posts/1',
-      method: 'get',
-      cancelToken: new CancelToken(c => cancel = c)
+    axios.get('http://localhost:3000/posts/1', {
+      data: { 'key': 'value' }
     }).then(result => {
       console.log(result)
-    }, error => {
-      console.log(error)
     })
-    console.log(cancel);
+
   </script>
 </body>
 
