@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>axios快速使用</title>
+  <script src="./dist/bundle.js"></script>
+</head>
+
+<body>
+  <button onclick="cancelRequest()">取消</button>
+  <script>
+    var CancelToken = axios.CancelToken
+    function cancelRequest() {
+      cancel()
+    }
+    var cancel;
+
+    axios({
+      url: 'http://localhost:3000/posts/1',
+      method: 'get',
+      cancelToken: new CancelToken(c => cancel = c)
+    }).then(result => {
+      console.log(result)
+    }, error => {
+      console.log(error)
+    })
+    console.log(cancel);
+  </script>
+</body>
+
+</html>
